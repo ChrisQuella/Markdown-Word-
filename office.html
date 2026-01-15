@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>办公版 - Markdown 转 Word</title>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        :root {
+            --primary-color: #38d9a9;
+            --primary-light: #e6fcf5;
+            --header-bg: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --toolbar-bg: #fff;
+            --border-color: #e5e7eb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --hover-bg: #f3f4f6;
+            --btn-secondary-bg: #f9fafb;
+            --editor-bg: #fff;
+            --preview-bg: #fff;
+            --panel-header-bg: #f9fafb;
+            --blockquote-bg: #e6fcf5;
+            --code-bg: #f3f4f6;
+            --pre-bg: #1f2937;
+            --pre-text: #e5e7eb;
+            --table-header-bg: #f9fafb;
+            --modal-bg: #fff;
+            --input-bg: #fff;
+            --toc-bg: #e6fcf5;
+            --status-bar-bg: #f9fafb;
+            --line-numbers-bg: #f9fafb;
+        }
+        .header {
+            background: var(--header-bg);
+            color: white;
+        }
+        .header .logo, .header .back-btn { color: white; }
+        .header .btn-secondary { background: rgba(255,255,255,0.2); color: white; border: none; }
+        
+        /* 可视化工具栏 */
+        .visual-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 12px 20px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .visual-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .visual-btn:hover {
+            background: #f3f4f6;
+            border-color: var(--primary-color);
+        }
+        .visual-btn.active {
+            background: var(--primary-light);
+            border-color: var(--primary-color);
+        }
+        .toolbar-sep {
+            width: 1px;
+            height: 36px;
+            background: #e5e7eb;
+            margin: 0 8px;
+        }
+        
+        /* 图片拖拽区域 */
+        .drop-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            transition: all 0.2s;
+        }
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+        .drop-zone-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* 导出选项 */
+        .export-options {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">←</a>
+                <span class="logo">💼 办公版</span>
+            </div>
+            <div class="header-right">
+                <label class="btn btn-secondary">
+                    <input type="file" id="fileInput" accept=".md,.markdown,.txt" hidden>
+                    📁 打开文件
+                </label>
+                <button id="styleBtn" class="btn btn-secondary">🎨 样式</button>
+                <div class="export-options">
+                    <button id="downloadWord" class="btn btn-success">📄 Word</button>
+                    <button id="downloadPdf" class="btn btn-primary">📑 PDF</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 可视化工具栏 -->
+        <div class="visual-toolbar">
+            <button class="visual-btn" data-action="h1" title="一级标题">H1</button>
+            <button class="visual-btn" data-action="h2" title="二级标题">H2</button>
+            <button class="visual-btn" data-action="h3" title="三级标题">H3</button>
+            <div class="toolbar-sep"></div>
+            <button class="visual-btn" data-action="bold" title="粗体"><b>B</b></button>
+            <button class="visual-btn" data-action="italic" title="斜体"><i>I</i></button>
+            <button class="visual-btn" data-action="strike" title="删除线"><s>S</s></button>
+            <div class="toolbar-sep"></div>
+            <button class="visual-btn" data-action="ul" title="无序列表">•</button>
+            <button class="visual-btn" data-action="ol" title="有序列表">1.</button>
+            <button class="visual-btn" data-action="quote" title="引用">❝</button>
+            <div class="toolbar-sep"></div>
+            <button class="visual-btn" data-action="table" title="表格">📊</button>
+            <button class="visual-btn" data-action="image" title="图片">🖼️</button>
+            <button class="visual-btn" data-action="link" title="链接">🔗</button>
+            <button class="visual-btn" data-action="hr" title="分割线">—</button>
+            <div class="toolbar-sep"></div>
+            <button class="visual-btn" data-action="undo" title="撤销">↩️</button>
+            <button class="visual-btn" data-action="redo" title="重做">↪️</button>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span>编辑区</span>
+                    <span id="charCount">0 字</span>
+                </div>
+                <textarea id="markdownInput" placeholder="在此输入内容，或使用上方工具栏快速插入格式...
+
+提示：
+• 点击工具栏按钮可快速插入格式
+• 支持拖拽图片到编辑区
+• 可导出为 Word 或 PDF 格式"></textarea>
+            </div>
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span>预览</span>
+                    <select id="templateSelect">
+                        <option value="default">默认样式</option>
+                        <option value="business">商务报告</option>
+                        <option value="simple">简约风格</option>
+                        <option value="formal">正式公文</option>
+                    </select>
+                </div>
+                <div id="preview" class="preview-content"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span id="wordCount">0 词</span>
+                <span>|</span>
+                <span id="readTime">阅读约 0 分钟</span>
+            </div>
+            <div class="status-item">
+                <span>办公版</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片上传弹窗 -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>🖼️ 插入图片</h2>
+                <button class="close-btn" id="closeImageModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-text">
+                        拖拽图片到此处<br>或点击选择文件
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+                <div class="style-row" style="margin-top: 16px;">
+                    <label>图片描述</label>
+                    <input type="text" id="imageAlt" placeholder="图片描述文字" style="flex:1; margin-left: 10px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelImage" class="btn btn-secondary">取消</button>
+                <button id="insertImage" class="btn btn-primary">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 样式弹窗 -->
+    <div id="styleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎨 文档样式</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-section">
+                    <h3>文档模板</h3>
+                    <div class="template-grid">
+                        <button class="template-btn active" data-template="default">默认样式</button>
+                        <button class="template-btn" data-template="business">商务报告</button>
+                        <button class="template-btn" data-template="simple">简约风格</button>
+                        <button class="template-btn" data-template="formal">正式公文</button>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>字体设置</h3>
+                    <div class="style-row">
+                        <label>正文字体</label>
+                        <select id="bodyFont">
+                            <option value="微软雅黑">微软雅黑</option>
+                            <option value="宋体">宋体</option>
+                            <option value="黑体">黑体</option>
+                            <option value="仿宋">仿宋</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>正文字号</label>
+                        <select id="bodySize">
+                            <option value="10.5">五号 (10.5pt)</option>
+                            <option value="12" selected>小四 (12pt)</option>
+                            <option value="14">四号 (14pt)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>页面设置</h3>
+                    <div class="style-row">
+                        <label>行间距</label>
+                        <select id="lineSpacing">
+                            <option value="1">单倍</option>
+                            <option value="1.5" selected>1.5倍</option>
+                            <option value="2">双倍</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>页边距</label>
+                        <select id="pageMargin">
+                            <option value="normal" selected>普通</option>
+                            <option value="narrow">窄</option>
+                            <option value="wide">宽</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>页眉页脚</h3>
+                    <div class="style-row">
+                        <label>页眉文字</label>
+                        <input type="text" id="headerText" placeholder="留空则不显示">
+                    </div>
+                    <div class="style-row">
+                        <label>显示页码</label>
+                        <select id="showPageNum">
+                            <option value="yes">是</option>
+                            <option value="no">否</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="resetStyle" class="btn btn-secondary">重置</button>
+                <button id="applyStyle" class="btn btn-primary">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="office.js"></script>
+</body>
+</html>

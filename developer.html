@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者版 - Markdown 转 Word</title>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <style>
+        :root {
+            --primary-color: #4facfe;
+            --primary-light: #e8f4fe;
+            --header-bg: #1e1e1e;
+            --toolbar-bg: #252526;
+            --border-color: #3c3c3c;
+            --text-primary: #cccccc;
+            --text-secondary: #858585;
+            --text-muted: #5a5a5a;
+            --hover-bg: #2a2d2e;
+            --btn-secondary-bg: #3c3c3c;
+            --editor-bg: #1e1e1e;
+            --preview-bg: #1e1e1e;
+            --panel-header-bg: #252526;
+            --blockquote-bg: #2d2d2d;
+            --code-bg: #2d2d2d;
+            --pre-bg: #282c34;
+            --pre-text: #abb2bf;
+            --table-header-bg: #2d2d2d;
+            --modal-bg: #252526;
+            --input-bg: #3c3c3c;
+            --toc-bg: #2d2d2d;
+            --status-bar-bg: #007acc;
+            --line-numbers-bg: #1e1e1e;
+        }
+        body { background: #1e1e1e; }
+        .header { background: var(--header-bg); border-bottom: 1px solid var(--border-color); }
+        .logo { color: var(--text-primary); }
+        .back-btn { color: var(--text-secondary); }
+        .status-bar { color: white; }
+        
+        /* 深色模式特殊样式 */
+        .preview-content a { color: #4facfe; }
+        .preview-content h1, .preview-content h2 { border-color: #3c3c3c; }
+        
+        /* 快捷键提示 */
+        .shortcut-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">←</a>
+                <span class="logo">💻 开发者版</span>
+            </div>
+            <div class="header-right">
+                <label class="btn btn-secondary">
+                    <input type="file" id="fileInput" accept=".md,.markdown,.txt" hidden>
+                    📁 打开
+                </label>
+                <button id="styleBtn" class="btn btn-secondary">⚙️ 设置</button>
+                <button id="downloadBtn" class="btn btn-success">⬇️ 导出</button>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="toolbar-btn" data-action="heading" title="标题 (Ctrl+H)">H1</button>
+                <button class="toolbar-btn" data-action="bold" title="粗体 (Ctrl+B)">**B**</button>
+                <button class="toolbar-btn" data-action="italic" title="斜体 (Ctrl+I)">*I*</button>
+                <button class="toolbar-btn" data-action="code" title="行内代码 (Ctrl+`)">``</button>
+                <span class="toolbar-divider"></span>
+                <button class="toolbar-btn" data-action="codeblock" title="代码块 (Ctrl+Shift+K)">```</button>
+                <button class="toolbar-btn" data-action="link" title="链接 (Ctrl+K)">[🔗]</button>
+                <button class="toolbar-btn" data-action="table" title="表格">📊</button>
+                <button class="toolbar-btn" data-action="list" title="列表">• —</button>
+            </div>
+            <div class="toolbar-group">
+                <span class="status-item">
+                    <span class="save-indicator" id="saveIndicator"></span>
+                    <span id="saveStatus">已保存</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span>Editor</span>
+                    <span id="charCount">Ln 1, Col 1</span>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea id="markdownInput" placeholder="# 开始编写技术文档
+
+支持快捷键：
+- Ctrl+B 粗体
+- Ctrl+I 斜体
+- Ctrl+` 行内代码
+- Ctrl+S 保存草稿
+
+```javascript
+// 代码高亮示例
+function hello() {
+    console.log('Hello, World!');
+}
+```"></textarea>
+                </div>
+            </div>
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span>Preview</span>
+                    <select id="previewTheme">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
+                <div id="preview" class="preview-content"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>Markdown</span>
+                <span>|</span>
+                <span id="wordCount">0 words</span>
+                <span>|</span>
+                <span id="lineCount">1 lines</span>
+            </div>
+            <div class="status-item">
+                <span>UTF-8</span>
+                <span>|</span>
+                <span>开发者版</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="styleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ 设置</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-section">
+                    <h3>文档模板</h3>
+                    <div class="template-grid">
+                        <button class="template-btn active" data-template="tech">技术文档</button>
+                        <button class="template-btn" data-template="api">API 文档</button>
+                        <button class="template-btn" data-template="readme">README</button>
+                        <button class="template-btn" data-template="notes">开发笔记</button>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>代码设置</h3>
+                    <div class="style-row">
+                        <label>代码字体</label>
+                        <select id="codeFont">
+                            <option value="Consolas">Consolas</option>
+                            <option value="Monaco">Monaco</option>
+                            <option value="Fira Code">Fira Code</option>
+                            <option value="JetBrains Mono">JetBrains Mono</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>代码字号</label>
+                        <select id="codeSize">
+                            <option value="10">10pt</option>
+                            <option value="11" selected>11pt</option>
+                            <option value="12">12pt</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>正文设置</h3>
+                    <div class="style-row">
+                        <label>正文字体</label>
+                        <select id="bodyFont">
+                            <option value="微软雅黑">微软雅黑</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Segoe UI">Segoe UI</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>正文字号</label>
+                        <select id="bodySize">
+                            <option value="10.5">10.5pt</option>
+                            <option value="11" selected>11pt</option>
+                            <option value="12">12pt</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>自动保存</h3>
+                    <div class="style-row">
+                        <label>保存间隔</label>
+                        <select id="autoSaveInterval">
+                            <option value="10">10秒</option>
+                            <option value="30" selected>30秒</option>
+                            <option value="60">1分钟</option>
+                            <option value="0">关闭</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="clearDraft" class="btn btn-secondary">清除草稿</button>
+                <button id="applyStyle" class="btn btn-primary">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="developer.js"></script>
+</body>
+</html>

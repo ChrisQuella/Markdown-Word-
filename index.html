@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 转 Word 工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+        }
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .card .subtitle {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+        .card ul {
+            text-align: left;
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        .card li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .card li:last-child { border-bottom: none; }
+        .card li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .card-btn {
+            display: inline-block;
+            padding: 14px 40px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .card:nth-child(1) .card-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .card:nth-child(2) .card-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .card:nth-child(3) .card-btn {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        .card:hover .card-btn {
+            transform: scale(1.05);
+        }
+        .footer {
+            margin-top: 50px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Markdown 转 Word</h1>
+        <p>选择适合你的版本，开始转换文档</p>
+    </div>
+
+    <div class="cards">
+        <a href="academic.html" class="card">
+            <div class="card-icon">🎓</div>
+            <h2>学术版</h2>
+            <p class="subtitle">论文写作 · 学术报告 · 研究文档</p>
+            <ul>
+                <li>自动生成目录</li>
+                <li>LaTeX 数学公式</li>
+                <li>图片插入与管理</li>
+                <li>参考文献格式</li>
+                <li>学术论文模板</li>
+            </ul>
+            <span class="card-btn">进入学术版</span>
+        </a>
+
+        <a href="developer.html" class="card">
+            <div class="card-icon">💻</div>
+            <h2>开发者版</h2>
+            <p class="subtitle">技术文档 · API文档 · 代码笔记</p>
+            <ul>
+                <li>深色模式</li>
+                <li>代码块语法高亮</li>
+                <li>自动保存草稿</li>
+                <li>快捷键支持</li>
+                <li>技术文档模板</li>
+            </ul>
+            <span class="card-btn">进入开发者版</span>
+        </a>
+
+        <a href="office.html" class="card">
+            <div class="card-icon">💼</div>
+            <h2>办公版</h2>
+            <p class="subtitle">工作报告 · 商务文档 · 日常办公</p>
+            <ul>
+                <li>可视化工具栏</li>
+                <li>图片拖拽上传</li>
+                <li>多格式导出 (Word/PDF)</li>
+                <li>页眉页脚设置</li>
+                <li>商务文档模板</li>
+            </ul>
+            <span class="card-btn">进入办公版</span>
+        </a>
+    </div>
+
+    <div class="footer">
+        支持 Markdown 标准语法 · 完全免费 · 本地处理无需上传
+    </div>
+</body>
+</html>

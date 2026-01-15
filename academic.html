@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术版 - Markdown 转 Word</title>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <style>
+        :root {
+            --primary-color: #f5576c;
+            --primary-light: #fef2f3;
+            --header-bg: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --toolbar-bg: #fff;
+            --border-color: #e5e7eb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --hover-bg: #f3f4f6;
+            --btn-secondary-bg: #f9fafb;
+            --editor-bg: #fff;
+            --preview-bg: #fff;
+            --panel-header-bg: #f9fafb;
+            --blockquote-bg: #fef2f3;
+            --code-bg: #f3f4f6;
+            --pre-bg: #1f2937;
+            --pre-text: #e5e7eb;
+            --table-header-bg: #f9fafb;
+            --modal-bg: #fff;
+            --input-bg: #fff;
+            --toc-bg: #fef2f3;
+            --status-bar-bg: #f9fafb;
+            --line-numbers-bg: #f9fafb;
+        }
+        .header {
+            background: var(--header-bg);
+            color: white;
+        }
+        .header .logo, .header .back-btn { color: white; }
+        .header .btn-secondary { background: rgba(255,255,255,0.2); color: white; border: none; }
+        .header .btn-secondary:hover { background: rgba(255,255,255,0.3); }
+        
+        /* 公式样式 */
+        .katex-display {
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">←</a>
+                <span class="logo">🎓 学术版</span>
+            </div>
+            <div class="header-right">
+                <label class="btn btn-secondary">
+                    <input type="file" id="fileInput" accept=".md,.markdown,.txt" hidden>
+                    📁 上传
+                </label>
+                <button id="tocBtn" class="btn btn-secondary">📑 生成目录</button>
+                <button id="styleBtn" class="btn btn-secondary">🎨 样式</button>
+                <button id="downloadBtn" class="btn btn-success">⬇️ 下载 Word</button>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="toolbar-btn" data-action="heading" title="标题">H</button>
+                <button class="toolbar-btn" data-action="bold" title="粗体">B</button>
+                <button class="toolbar-btn" data-action="italic" title="斜体">I</button>
+                <span class="toolbar-divider"></span>
+                <button class="toolbar-btn" data-action="formula" title="行内公式">∑</button>
+                <button class="toolbar-btn" data-action="formula-block" title="公式块">∫</button>
+                <span class="toolbar-divider"></span>
+                <button class="toolbar-btn" data-action="image" title="插入图片">🖼️</button>
+                <button class="toolbar-btn" data-action="table" title="插入表格">📊</button>
+                <button class="toolbar-btn" data-action="quote" title="引用">❝</button>
+                <span class="toolbar-divider"></span>
+                <button class="toolbar-btn" data-action="ref" title="参考文献">[1]</button>
+            </div>
+            <div class="toolbar-group">
+                <select id="templateSelect">
+                    <option value="thesis">学位论文</option>
+                    <option value="paper">期刊论文</option>
+                    <option value="report">研究报告</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span>Markdown 编辑器</span>
+                    <span id="charCount">0 字符</span>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea id="markdownInput" placeholder="在此输入 Markdown 内容...
+
+支持 LaTeX 公式：
+- 行内公式：$E = mc^2$
+- 公式块：
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$"></textarea>
+                </div>
+            </div>
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span>实时预览</span>
+                    <label><input type="checkbox" id="showToc" checked> 显示目录</label>
+                </div>
+                <div id="preview" class="preview-content"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>学术版</span>
+                <span>|</span>
+                <span id="wordCount">0 词</span>
+            </div>
+            <div class="status-item">
+                <span>支持 LaTeX 公式</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 样式弹窗 -->
+    <div id="styleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎨 论文样式设置</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-section">
+                    <h3>论文模板</h3>
+                    <div class="template-grid">
+                        <button class="template-btn active" data-template="thesis">学位论文</button>
+                        <button class="template-btn" data-template="paper">期刊论文</button>
+                        <button class="template-btn" data-template="report">研究报告</button>
+                        <button class="template-btn" data-template="book">书籍章节</button>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>字体设置</h3>
+                    <div class="style-row">
+                        <label>中文正文</label>
+                        <select id="bodyFont">
+                            <option value="宋体" selected>宋体</option>
+                            <option value="仿宋">仿宋</option>
+                            <option value="楷体">楷体</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>英文正文</label>
+                        <select id="engFont">
+                            <option value="Times New Roman" selected>Times New Roman</option>
+                            <option value="Arial">Arial</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>正文字号</label>
+                        <select id="bodySize">
+                            <option value="10.5">五号 (10.5pt)</option>
+                            <option value="12" selected>小四 (12pt)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="style-section">
+                    <h3>段落设置</h3>
+                    <div class="style-row">
+                        <label>行间距</label>
+                        <select id="lineSpacing">
+                            <option value="1.5">1.5倍</option>
+                            <option value="2" selected>双倍</option>
+                        </select>
+                    </div>
+                    <div class="style-row">
+                        <label>首行缩进</label>
+                        <select id="firstIndent">
+                            <option value="2" selected>2字符</option>
+                            <option value="0">无缩进</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="resetStyle" class="btn btn-secondary">重置</button>
+                <button id="applyStyle" class="btn btn-primary">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="academic.js"></script>
+</body>
+</html>

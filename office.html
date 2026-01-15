@@ -287,6 +287,27 @@
         </div>
     </div>
 
+    <!-- 文件名弹窗 -->
+    <div id="filenameModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>📄 导出文件</h2>
+                <button class="close-btn" id="closeFilenameModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-row">
+                    <label>文件名</label>
+                    <input type="text" id="filenameInput" placeholder="办公文档" style="flex:1; margin-left: 10px;">
+                </div>
+                <p style="font-size: 12px; color: #888; margin-top: 10px;">留空则使用默认名称</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelFilename" class="btn btn-secondary">取消</button>
+                <button id="confirmFilename" class="btn btn-primary">导出</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>

@@ -6,6 +6,7 @@ function createWindow() {
         width: 1400,
         height: 900,
         title: 'MD转Word工具',
+        icon: path.join(__dirname, 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true
@@ -13,8 +14,6 @@ function createWindow() {
     });
 
     win.loadFile('index.html');
-    
-    // 隐藏菜单栏
     win.setMenuBarVisibility(false);
 }
 

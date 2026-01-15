@@ -340,7 +340,7 @@ function parseInline(text, font, size) {
 }
 
 // 生成 Word
-async function generateWord() {
+async function doGenerateWord(filename) {
     try {
         const markdown = markdownInput.value;
         if (!markdown.trim()) { alert('请先输入内容'); return; }
@@ -436,12 +436,39 @@ async function generateWord() {
         });
 
         const blob = await Packer.toBlob(doc);
-        const filename = prompt('请输入文件名（不含扩展名）：', '技术文档') || '技术文档';
         saveAs(blob, filename + '.docx');
     } catch (error) {
         console.error(error);
         alert('生成失败: ' + error.message);
     }
+}
+
+// 文件名弹窗
+const filenameModal = document.getElementById('filenameModal');
+const filenameInput = document.getElementById('filenameInput');
+
+document.getElementById('closeFilenameModal').addEventListener('click', () => filenameModal.classList.remove('active'));
+document.getElementById('cancelFilename').addEventListener('click', () => filenameModal.classList.remove('active'));
+
+function showFilenameModal() {
+    filenameInput.value = '';
+    filenameModal.classList.add('active');
+    filenameInput.focus();
+}
+
+document.getElementById('confirmFilename').addEventListener('click', () => {
+    const filename = filenameInput.value.trim() || '技术文档';
+    filenameModal.classList.remove('active');
+    doGenerateWord(filename);
+});
+
+filenameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('confirmFilename').click();
+});
+
+function generateWord() {
+    if (!markdownInput.value.trim()) { alert('请先输入内容'); return; }
+    showFilenameModal();
 }
 
 downloadBtn.addEventListener('click', generateWord);

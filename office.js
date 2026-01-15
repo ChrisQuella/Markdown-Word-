@@ -243,6 +243,39 @@ document.getElementById('resetStyle').addEventListener('click', () => {
     document.getElementById('showPageNum').value = 'yes';
 });
 
+// 文件名弹窗
+const filenameModal = document.getElementById('filenameModal');
+const filenameInput = document.getElementById('filenameInput');
+let currentExportType = 'word';
+
+document.getElementById('closeFilenameModal').addEventListener('click', () => filenameModal.classList.remove('active'));
+document.getElementById('cancelFilename').addEventListener('click', () => filenameModal.classList.remove('active'));
+
+function showFilenameModal(type, defaultName) {
+    currentExportType = type;
+    filenameInput.value = '';
+    filenameInput.placeholder = defaultName;
+    filenameModal.classList.add('active');
+    filenameInput.focus();
+}
+
+document.getElementById('confirmFilename').addEventListener('click', () => {
+    const filename = filenameInput.value.trim() || filenameInput.placeholder;
+    filenameModal.classList.remove('active');
+    if (currentExportType === 'word') {
+        doGenerateWord(filename);
+    } else {
+        doGeneratePdf(filename);
+    }
+});
+
+// 回车确认
+filenameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        document.getElementById('confirmFilename').click();
+    }
+});
+
 // 解析 Markdown
 function parseMarkdown(markdown) {
     const lines = markdown.split('\n');
@@ -311,7 +344,7 @@ function parseInline(text, font, size) {
 }
 
 // 生成 Word
-async function generateWord() {
+async function doGenerateWord(filename) {
     try {
         const markdown = markdownInput.value;
         if (!markdown.trim()) { alert('请先输入内容'); return; }
@@ -433,7 +466,6 @@ async function generateWord() {
         });
 
         const blob = await Packer.toBlob(doc);
-        const filename = prompt('请输入文件名（不含扩展名）：', '办公文档') || '办公文档';
         saveAs(blob, filename + '.docx');
     } catch (error) {
         console.error(error);
@@ -441,9 +473,13 @@ async function generateWord() {
     }
 }
 
+function generateWord() {
+    if (!markdownInput.value.trim()) { alert('请先输入内容'); return; }
+    showFilenameModal('word', '办公文档');
+}
+
 // 导出 PDF
-function generatePdf() {
-    const filename = prompt('请输入文件名（不含扩展名）：', '办公文档') || '办公文档';
+function doGeneratePdf(filename) {
     const content = preview.cloneNode(true);
     const opt = {
         margin: 10,
@@ -453,6 +489,11 @@ function generatePdf() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(content).save();
+}
+
+function generatePdf() {
+    if (!markdownInput.value.trim()) { alert('请先输入内容'); return; }
+    showFilenameModal('pdf', '办公文档');
 }
 
 downloadWord.addEventListener('click', generateWord);

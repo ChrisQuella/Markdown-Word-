@@ -23,8 +23,15 @@
     "files": [
       "main.js",
       "index.html",
-      "styles.css",
-      "app.js"
+      "academic.html",
+      "academic.js",
+      "developer.html",
+      "developer.js",
+      "office.html",
+      "office.js",
+      "shared.css",
+      "app.js",
+      "styles.css"
     ]
   }
 }
